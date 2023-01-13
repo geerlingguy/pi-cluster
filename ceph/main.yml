@@ -1,0 +1,71 @@
+---
+- name: Set up cluster-wide configuration.
+  hosts: cluster
+  gather_facts: false
+  become: true
+
+  handlers:
+    - name: reboot-pi
+      reboot:
+
+  vars_files:
+    - config.yml
+
+  tasks: []
+
+
+- name: Configure the control plane (node 1).
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - config.yml
+
+  tasks:
+    # See: https://forums.raspberrypi.com/viewtopic.php?t=274486
+    - name: Set up the Debian unstable repo (TODO).
+      meta: noop
+
+    # See: https://ceph.com/en/news/blog/2022/install-ceph-in-a-raspberrypi-4-cluster/
+    - name: Install cephadm (TODO).
+      meta: noop
+
+    - name: Create the ceph cluster (TODO).
+      meta: noop
+
+    - name: Retrieve the ceph pubkey.
+      ansible.builtin.fetch:
+        src: /etc/ceph/ceph.pub
+        dest: files/ceph.pub
+        flat: yes
+
+    - name: Ensure NFS dependencies are installed.
+      ansible.builtin.package:
+        name:
+          - libcephfs2
+          - nfs-ganesha
+          - nfs-ganesha-ceph
+        state: present
+
+- name: Configure the nodes (nodes 2-6).
+  hosts: nodes
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - config.yml
+
+  tasks:
+    - name: Ensure Ceph dependencies are installed.
+      ansible.builtin.package:
+        name:
+          - podman
+          - lvm2
+        state: present
+
+    - name: Copy the ceph pubkey to each node.
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', 'files/ceph.pub') }}"

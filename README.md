@@ -70,6 +70,10 @@ sda           8:0    0  1.8T  0 disk
 sdb           8:16   0  1.8T  0 disk 
 ```
 
+### Ceph Storage Configuration
+
+You could also run Ceph on a Pi cluster—see the storage configuration playbook inside the `ceph` directory.
+
 ### Static network configuration (optional, but recommended)
 
 I using my cluster both on-premise and remote (using a 4G LTE modem connected to the first Pi), I set it up on its own subnet (10.1.1.x). You can change the subnet that's used via the `ipv4_subnet_prefix` variable in `config.yml`.
