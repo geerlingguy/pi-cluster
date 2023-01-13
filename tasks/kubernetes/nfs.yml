@@ -1,0 +1,30 @@
+---
+- name: Configure NFS Subdir External Provisioner.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - ../../config.yml
+
+  environment:
+    # The location of the kubeconfig file on the master.
+    K8S_AUTH_KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    PATH: "~/go/bin:{{ ansible_env.PATH }}"
+
+  tasks:
+    - name: Add nfs-subdir-external-provisioner chart repo.
+      kubernetes.core.helm_repository:
+        name: nfs-subdir-external-provisioner
+        repo_url: "https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/"
+
+    - name: Deploy NFS Subdir External Provisioner Helm chart.
+      kubernetes.core.helm:
+        name: nfs-subdir-external-provisioner
+        chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+        release_namespace: default
+        state: present
+        values:
+          nfs:
+            server: "{{ groups['storage'][0] }}"
+            path: "/{{ storage_pool_name }}/{{ storage_nfs_share_name }}"

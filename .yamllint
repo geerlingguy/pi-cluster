@@ -1,0 +1,11 @@
+---
+extends: default
+rules:
+  line-length:
+    max: 140
+    level: warning
+  truthy: false
+
+ignore: |
+  **/.github/workflows/ci.yml
+  **/stale.yml

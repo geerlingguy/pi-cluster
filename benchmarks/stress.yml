@@ -1,0 +1,21 @@
+---
+- name: Stress the CPUs for temperature and power testing.
+  hosts: all
+  gather_facts: true
+  become: true
+
+  vars:
+    stress_time: 5m
+
+  vars_files:
+    - ../config.yml
+
+  tasks:
+    - name: Ensure stress-ng is installed.
+      ansible.builtin.package:
+        name: stress-ng
+        state: present
+
+    - name: Run stress-ng.
+      ansible.builtin.command: >-
+        stress-ng -c {{ ansible_processor_vcpus }} -t {{ stress_time }}

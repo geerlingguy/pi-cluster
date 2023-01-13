@@ -1,0 +1,123 @@
+---
+- name: Set up cluster-wide configuration.
+  hosts: cluster
+  gather_facts: false
+  become: true
+
+  handlers:
+    - name: reboot-pi
+      reboot:
+
+  vars_files:
+    - config.yml
+
+  tasks:
+    - name: Ensure cgroups are configured correctly in cmdline.txt.
+      ansible.builtin.replace:
+        path: /boot/cmdline.txt
+        regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
+        replace: '\1 {{ item }}'
+      with_items:
+        - "cgroup_memory=1"
+        - "cgroup_enable=memory"
+      notify: reboot-pi
+
+    - name: Download K3s install script.
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: "~/k3s_install.sh"
+        mode: a+x
+
+
+- name: Configure storage node.
+  hosts: storage
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - config.yml
+
+  tasks:
+    - name: Set up storage.
+      include_tasks: tasks/storage.yml
+      when: storage_configure
+
+
+- name: Configure the control plane.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - config.yml
+
+  tasks:
+    - name: Install K3s on control plane (takes a while).
+      ansible.builtin.shell: >-
+        ~/k3s_install.sh >> ~/k3s_install_log.txt
+      args:
+        chdir: "~"
+        creates: /var/lib/rancher/k3s/server/node-token
+
+    - name: Get node token.
+      ansible.builtin.command: cat /var/lib/rancher/k3s/server/node-token
+      changed_when: false
+      register: node_token_output
+
+    - name: Set node_token fact.
+      ansible.builtin.set_fact:
+        node_token: "{{ node_token_output.stdout_lines[0] }}"
+
+    - name: Ensure required dependencies are installed.
+      ansible.builtin.package:
+        name:
+          - python3-pip
+          - python3-setuptools
+          - build-essential
+          - golang
+          - git
+        state: present
+      become: true
+
+    - name: Ensure required Python libraries are installed.
+      ansible.builtin.pip:
+        name:
+          - openshift
+          - pyyaml
+        state: present
+      become: true
+
+
+- name: Configure the worker nodes.
+  hosts: nodes
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - config.yml
+
+  tasks:
+    - name: Install K3s on nodes (takes a while).
+      ansible.builtin.shell: >-
+        K3S_URL=https://"{{ groups['control_plane'][0] }}":6443
+        K3S_TOKEN="{{ hostvars[groups['control_plane'][0]]['node_token'] }}"
+        ~/k3s_install.sh >> ~/k3s_install_log.txt
+      args:
+        chdir: "~"
+        creates: /var/lib/rancher/k3s/agent/kubelet.kubeconfig
+
+- name: Set up Helm.
+  import_playbook: tasks/kubernetes/helm.yml
+  tags: ['helm']
+
+- name: Set up NFS PVCs.
+  import_playbook: tasks/kubernetes/nfs.yml
+  tags: ['nfs']
+
+- name: Set up Prometheus.
+  import_playbook: tasks/kubernetes/prometheus.yml
+  tags: ['prometheus']
+
+- name: Set up Drupal.
+  import_playbook: tasks/kubernetes/drupal.yml
+  tags: ['drupal']

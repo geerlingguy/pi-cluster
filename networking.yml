@@ -1,0 +1,10 @@
+---
+- name: Configure reverse SSH tunnels for SSH and HTTP on control plane.
+  import_playbook: tasks/networking/reverse-tunnel.yml
+  when: reverse_tunnel_enable
+
+- name: Set up static networking configuration.
+  import_playbook: tasks/networking/static-networking.yml
+
+- name: Configure control plane as a router.
+  import_playbook: tasks/networking/router.yml

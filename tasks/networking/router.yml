@@ -1,0 +1,70 @@
+---
+- name: Configure node 1 as a router.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  handlers:
+    - name: restart dnsmasq
+      ansible.builtin.service:
+        name: dnsmasq
+        state: restarted
+
+    - name: persist iptables rules
+      ansible.builtin.command: netfilter-persistent save
+
+  vars_files:
+    - ../../config.yml
+
+  tasks:
+    - name: Install routing prerequisites.
+      ansible.builtin.apt:
+        name:
+          - dnsmasq
+          - netfilter-persistent
+          - iptables-persistent
+        state: present
+
+    - name: Ensure netfilter-persistent is enabled.
+      ansible.builtin.service:
+        name: netfilter-persistent
+        enabled: true
+
+    - name: Ensure dnsmasq is running and enabled.
+      ansible.builtin.service:
+        name: dnsmasq
+        state: started
+        enabled: true
+
+    - name: "Configure iptables for {{ active_internet_interface }} masquerade."
+      ansible.builtin.iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "{{ active_internet_interface }}"
+        jump: MASQUERADE
+      notify: persist iptables rules
+
+    - name: Enable IPv4 forwarding.
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+
+    - name: Configure dnsmasq for bridged DNS.
+      ansible.builtin.copy:
+        dest: /etc/dnsmasq.d/bridge.conf
+        content: |
+          interface=eth0
+          bind-interfaces
+          server=1.1.1.1
+          server=1.0.0.1
+          domain-needed
+          bogus-priv
+      notify: restart dnsmasq
+
+    # See: https://github.com/geerlingguy/turing-pi-2-cluster/issues/9
+    - name: Add crontab task to restart dnsmasq.
+      ansible.builtin.cron:
+        name: "restart dnsmasq if not running"
+        minute: "*"
+        job: "/usr/bin/systemctl status dnsmasq || /usr/bin/systemctl restart dnsmasq"

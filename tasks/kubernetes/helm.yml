@@ -1,0 +1,43 @@
+---
+- name: Set up Helm.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars:
+    # See available releases: https://github.com/helm/helm/releases/
+    helm_version: 'v3.8.0'
+    helm_platform: linux
+    helm_arch: arm64
+    helm_bin_path: /usr/local/bin/helm
+
+  tasks:
+    - name: Check if Helm binary exists.
+      stat:
+        path: "{{ helm_bin_path }}"
+      register: helm_check
+
+    - name: Check Helm version.
+      command: "{{ helm_bin_path }} version"
+      failed_when: false
+      changed_when: false
+      register: helm_existing_version
+
+    - name: Download helm.
+      unarchive:
+        src: https://get.helm.sh/helm-{{ helm_version }}-{{ helm_platform }}-{{ helm_arch }}.tar.gz
+        dest: /tmp
+        remote_src: true
+      register: helm_download
+      when: >
+        not helm_check.stat.exists
+        or helm_version not in helm_existing_version.stdout
+
+    - name: Copy helm binary into place.
+      copy:
+        src: "/tmp/{{ helm_platform }}-{{ helm_arch }}/helm"
+        dest: "{{ helm_bin_path }}"
+        mode: 0755
+        remote_src: true
+      become: true
+      when: helm_download is changed

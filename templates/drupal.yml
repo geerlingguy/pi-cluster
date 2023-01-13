@@ -1,0 +1,119 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: drupal-config
+  namespace: drupal
+data:
+  settings.php: |-
+    <?php
+    $databases['default']['default'] = [
+      'database' => 'drupal',
+      'username' => 'drupal',
+      'password' => '{{ drupal_database_password }}',
+      'prefix' => '',
+      'host' => 'mariadb',
+      'port' => '3306',
+      'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+      'driver' => 'mysql',
+    ];
+    $settings['hash_salt'] = '{{ drupal_hash_salt }}';
+    $settings['trusted_host_patterns'] = ['{{ drupal_trusted_host_patterns }}'];
+    $settings['config_sync_directory'] = '{{ drupal_config_sync_directory }}';
+    {{ drupal_extra_settings_php }}
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: drupal-files-pvc
+  namespace: drupal
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: drupal
+  namespace: drupal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drupal
+  template:
+    metadata:
+      labels:
+        app: drupal
+    spec:
+      containers:
+        - name: drupal
+          image: '{{ drupal_image }}'
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 60
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 30
+          volumeMounts:
+            - mountPath: '{{ drupal_base_web_path }}'
+              name: drupal-settings
+            - mountPath: '{{ drupal_base_web_path }}files/'
+              name: drupal-files
+          resources:
+            limits:
+              cpu: '2'
+              memory: '2048Mi'
+            requests:
+              cpu: '1'
+              memory: '1024Mi'
+      volumes:
+        - name: drupal-settings
+          configMap:
+            name: drupal-config
+        - name: drupal-files
+          persistentVolumeClaim:
+            claimName: drupal-files-pvc
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: drupal
+  namespace: drupal
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+  selector:
+    app: drupal
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: drupal
+  namespace: drupal
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: drupal
+                port:
+                  number: 80

@@ -1,0 +1,51 @@
+---
+- name: Ensure ZFS prerequisites are installed.
+  ansible.builtin.apt:
+    name: raspberrypi-kernel-headers
+    state: present
+
+- name: Ensure ZFS is installed.
+  ansible.builtin.apt:
+    name:
+      - raspberrypi-kernel-headers
+      - zfs-dkms
+      - zfsutils-linux
+    state: present
+
+- name: Configure ZFS mirror pool.
+  ansible.builtin.command: "zpool create {{ storage_pool_name }} mirror /dev/sda /dev/sdb"
+  args:
+    creates: "/{{ storage_pool_name }}"
+
+- name: Ensure NFS filesystem is present in ZFS.
+  community.general.zfs:
+    name: "{{ storage_pool_name }}/{{ storage_nfs_share_name }}"
+    state: present
+
+- name: Configure permissions for ZFS share.
+  ansible.builtin.file:
+    dest: "/{{ storage_pool_name }}/{{ storage_nfs_share_name }}"
+    owner: root
+    group: pi
+    mode: 0777
+
+- name: Check if sharenfs is enabled on ZFS NFS share.
+  ansible.builtin.command: "zfs get sharenfs {{ storage_pool_name }}/{{ storage_nfs_share_name }}"
+  register: sharenfs_status
+  changed_when: false
+
+# Note: no_root_squash can be dangerous. Use at your own peril.
+- name: Ensure NFS filesystem is allowed to be shared via NFS.
+  ansible.builtin.command: "zfs set sharenfs='no_root_squash,rw=*' {{ storage_pool_name }}/{{ storage_nfs_share_name }}"
+  when: "'rw' not in sharenfs_status.stdout"
+
+- name: Ensure NFS is installed.
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: present
+
+- name: Ensure NFS is started and enabled at boot.
+  ansible.builtin.service:
+    name: nfs-server
+    state: started
+    enabled: true

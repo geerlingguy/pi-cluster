@@ -1,0 +1,29 @@
+---
+- name: Configure Prometheus + Grafana monitoring stack.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - ../../config.yml
+
+  environment:
+    # The location of the kubeconfig file on the master.
+    K8S_AUTH_KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    PATH: "~/go/bin:{{ ansible_env.PATH }}"
+
+  tasks:
+    - name: Add prometheus-community chart repo.
+      kubernetes.core.helm_repository:
+        name: prometheus-community
+        repo_url: "https://prometheus-community.github.io/helm-charts"
+
+    - name: Deploy Prometheus + Grafana Helm chart.
+      kubernetes.core.helm:
+        name: cluster-monitoring
+        chart_ref: prometheus-community/kube-prometheus-stack
+        release_namespace: default
+        state: present
+        values:
+          alertmanager:
+            enabled: false

@@ -1,0 +1,71 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mariadb-pvc
+  namespace: drupal
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mariadb
+  namespace: drupal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.6
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_DATABASE
+              value: drupal
+            - name: MARIADB_USER
+              value: drupal
+            - name: MARIADB_PASSWORD
+              value: '{{ drupal_database_password }}'
+            - name: MARIADB_RANDOM_ROOT_PASSWORD
+              value: 'yes'
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: database
+          resources:
+            limits:
+              cpu: '2'
+              memory: '4096Mi'
+            requests:
+              cpu: '1'
+              memory: '2048Mi'
+      volumes:
+        - name: database
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mariadb
+  namespace: drupal
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: mariadb

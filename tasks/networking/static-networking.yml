@@ -1,0 +1,56 @@
+---
+- name: Set up static networking configuration.
+  hosts: cluster
+  gather_facts: false
+  become: true
+
+  handlers:
+    - name: restart dhcpcd
+      service:
+        name: dhcpcd
+        state: restarted
+
+    - name: restart autossh
+      ansible.builtin.systemd:
+        name: autossh
+        state: restarted
+      when: reverse_tunnel_enable
+
+  vars_files:
+    - ../../config.yml
+
+  tasks:
+    - name: Configure static IP address on each node.
+      ansible.builtin.blockinfile:
+        path: /etc/dhcpcd.conf
+        marker: "# ANSIBLE MANAGED - static ip {mark}"
+        block: |
+          interface eth0
+          static ip_address={{ ipv4_subnet_prefix }}.{{ ip_host_octet }}/24
+          static routers={{ ipv4_subnet_prefix }}.1
+          static domain_name_servers={{ ipv4_subnet_prefix }}.1
+      notify: restart dhcpcd
+
+    # TODO: This doesn't use hosts as defined in inventory. Convert to template?
+    - name: Configure hosts file so nodes can see each other by hostname.
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: "# ANSIBLE MANAGED - static ip config {mark}"
+        block: |
+          {{ ipv4_subnet_prefix }}.1  node1.local node1
+          {{ ipv4_subnet_prefix }}.2  node2.local node2
+          {{ ipv4_subnet_prefix }}.3  node3.local node3
+          {{ ipv4_subnet_prefix }}.4  node4.local node4
+
+    - name: Set active Internet gateway interface on control plane.
+      ansible.builtin.blockinfile:
+        path: /etc/dhcpcd.conf
+        marker: "# ANSIBLE MANAGED - Internet routing metric {mark}"
+        block: |
+          interface {{ active_internet_interface }}
+          metric 100
+      delegate_to: "{{ groups['control_plane'][0] }}"
+      run_once: true
+      notify:
+        - restart dhcpcd
+        - restart autossh

@@ -1,0 +1,63 @@
+---
+# Note: This playbook makes the following assumptions:
+#
+# 1. The configured VPS server already has the proper sshd_config.
+# 2. Node 1 already has an SSH key generated that's on the VPS server.
+# 3. You've confirmed Node 1 can SSH into the VPS server.
+#
+# See: https://www.jeffgeerling.com/blog/2022/ssh-and-http-raspberry-pi-behind-cg-nat
+- name: Configure control plane as a reverse tunnel for SSH and HTTP.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - ../../config.yml
+
+  tasks:
+    - name: Install autossh.
+      ansible.builtin.apt:
+        name: autossh
+        state: present
+
+    - name: Configure autossh defaults.
+      ansible.builtin.copy:
+        dest: /etc/default/autossh
+        content: |
+          AUTOSSH_POLL=60
+          AUTOSSH_FIRST_POLL=30
+          AUTOSSH_GATETIME=0
+          AUTOSSH_PORT=22000
+          SSH_OPTIONS="-N -R 2222:localhost:22 -R 8080:localhost:80 {{ reverse_tunnel_vps_username }}@{{ reverse_tunnel_vps_hostname }}"
+
+    - name: Create autossh unit file.
+      ansible.builtin.copy:
+        dest: /lib/systemd/system/autossh.service
+        content: |
+          [Unit]
+          Description=autossh
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Type=simple
+          User=pi
+          EnvironmentFile=/etc/default/autossh
+          ExecStart=/usr/bin/autossh $SSH_OPTIONS
+          Restart=always
+          RestartSec=60
+
+          [Install]
+          WantedBy=multi-user.target
+      register: autossh_unit
+
+    - name: Reload systemd daemon if unit file changed.
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: autossh_unit is changed
+
+    - name: Ensure autossh service is running.
+      ansible.builtin.systemd:
+        name: autossh
+        state: started
+        enabled: true

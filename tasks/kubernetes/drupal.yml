@@ -1,0 +1,29 @@
+---
+- name: Configure Drupal.
+  hosts: control_plane
+  gather_facts: false
+  become: true
+
+  vars_files:
+    - ../../config.yml
+
+  environment:
+    # The location of the kubeconfig file on the master.
+    K8S_AUTH_KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    PATH: "~/go/bin:{{ ansible_env.PATH }}"
+
+  tasks:
+    - name: Create drupal namespace.
+      k8s:
+        name: drupal
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: Apply drupal manifests.
+      k8s:
+        definition: "{{ lookup('template', '../../templates/' + item ) }}"
+        state: present
+      loop:
+        - mariadb.yml
+        - drupal.yml
