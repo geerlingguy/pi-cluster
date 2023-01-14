@@ -74,6 +74,56 @@ sdb           8:16   0  1.8T  0 disk
 
 You could also run Ceph on a Pi cluster—see the storage configuration playbook inside the `ceph` directory.
 
+### Cluster configuration and K3s installation
+
+Run the playbook:
+
+```
+ansible-playbook main.yml
+```
+
+At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`. Alternatively, if you have SSH tunnelling configured, you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
+
+You can also log into node 1, switch to the root user account (`sudo su`), then use `kubectl` to manage the cluster (e.g. view Drupal pods with `kubectl get pods -n drupal`).
+
+K3s' `kubeconfig` file is located at `/etc/rancher/k3s/k3s.yaml`. If you'd like to manage the cluster from other hosts (or using a tool like Lens), copy the contents of that file, replacing `localhost` with the IP address or hostname of the control plane node, and paste the contents into a file `~/.kube/config`.
+
+### Upgrading the cluster
+
+Run the upgrade playbook:
+
+```
+ansible-playbook upgrade.yml
+```
+
+### Monitoring the cluster
+
+Prometheus and Grafana are used for monitoring. Grafana can be accessed via port forwarding (or you could choose to expose it another way).
+
+To access Grafana:
+
+  1. Make sure you set up a valid `~/.kube/config` file (see 'K3s installation' above).
+  1. Run `kubectl port-forward service/cluster-monitoring-grafana :80`
+  1. Grab the port that's output, and browse to `localhost:[port]`, and bingo! Grafana.
+
+The default login is `admin` / `prom-operator`, but you can also get the secret with `kubectl get secret cluster-monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -D`.
+
+### Benchmarking the cluster
+
+See the README file within the `benchmarks` folder.
+
+### Shutting down the cluster
+
+The safest way to shut down the cluster is to run the following command:
+
+```
+ansible all -B 500 -P 0 -a "shutdown now" -b
+```
+
+> Note: If using the SSH tunnel, you might want to run the command _first_ on nodes 2-4, _then_ on node 1. So first run `ansible 'all:!control_plane' [...]`, then run it again just for `control_plane`.
+
+Then after you confirm the nodes are shut down (with K3s running, it can take a few minutes), press the cluster's power button (or yank the Ethernet cables if using PoE) to power down all Pis physically. Then you can switch off or disconnect your power supply.
+
 ### Static network configuration (optional, but recommended)
 
 I using my cluster both on-premise and remote (using a 4G LTE modem connected to the first Pi), I set it up on its own subnet (10.1.1.x). You can change the subnet that's used via the `ipv4_subnet_prefix` variable in `config.yml`.
@@ -126,56 +176,6 @@ $ ssh -p 2222 pi@[my-vps-hostname]
 > In that case, log into the remote VPS and run `pgrep ssh | xargs kill` to kill off all active SSH sessions, then `autossh` should pick back up again.
 
 > **Warning**: Use this feature at your own risk. Security is your own responsibility, and for better protection, you should probably avoid directly exposing your cluster (e.g. by disabling the `GatewayPorts` option) so you can only access the cluster while already logged into your VPS).
-
-### Cluster configuration and K3s installation
-
-Run the playbook:
-
-```
-ansible-playbook main.yml
-```
-
-At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`. Alternatively, if you have SSH tunnelling configured, you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
-
-You can also log into node 1, switch to the root user account (`sudo su`), then use `kubectl` to manage the cluster (e.g. view Drupal pods with `kubectl get pods -n drupal`).
-
-K3s' `kubeconfig` file is located at `/etc/rancher/k3s/k3s.yaml`. If you'd like to manage the cluster from other hosts (or using a tool like Lens), copy the contents of that file, replacing `localhost` with the IP address or hostname of the control plane node, and paste the contents into a file `~/.kube/config`.
-
-### Upgrading the cluster
-
-Run the upgrade playbook:
-
-```
-ansible-playbook upgrade.yml
-```
-
-### Monitoring the cluster
-
-Prometheus and Grafana are used for monitoring. Grafana can be accessed via port forwarding (or you could choose to expose it another way).
-
-To access Grafana:
-
-  1. Make sure you set up a valid `~/.kube/config` file (see 'K3s installation' above).
-  1. Run `kubectl port-forward service/cluster-monitoring-grafana :80`
-  1. Grab the port that's output, and browse to `localhost:[port]`, and bingo! Grafana.
-
-The default login is `admin` / `prom-operator`, but you can also get the secret with `kubectl get secret cluster-monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -D`.
-
-### Benchmarking the cluster
-
-See the README file within the `benchmarks` folder.
-
-### Shutting down the cluster
-
-The safest way to shut down the cluster is to run the following command:
-
-```
-ansible all -B 500 -P 0 -a "shutdown now" -b
-```
-
-> Note: If using the SSH tunnel, you might want to run the command _first_ on nodes 2-4, _then_ on node 1. So first run `ansible 'all:!control_plane' [...]`, then run it again just for `control_plane`.
-
-Then after you confirm the nodes are shut down (with K3s running, it can take a few minutes), press the cluster's power button (or yank the Ethernet cables if using PoE) to power down all Pis physically. Then you can switch off or disconnect your power supply.
 
 ## Caveats
 
