@@ -108,6 +108,8 @@ To access Grafana:
 
 The default login is `admin` / `prom-operator`, but you can also get the secret with `kubectl get secret cluster-monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -D`.
 
+You can then browse to all the Kubernetes and Pi-related dashboards by browsing the Dashboards in the 'General' folder.
+
 ### Benchmarking the cluster
 
 See the README file within the `benchmarks` folder.
