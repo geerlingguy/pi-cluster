@@ -94,9 +94,13 @@ Run the playbook:
 ansible-playbook main.yml
 ```
 
-At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`. Alternatively, if you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
+At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`.
+
+Alternatively, if you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
 
 You can also log into node 1, switch to the root user account (`sudo su`), then use `kubectl` to manage the cluster (e.g. view Drupal pods with `kubectl get pods -n drupal`).
+
+The Kubernetes Ingress object for Drupal (how HTTP requests from outside the cluster make it to Drupal) can be found by running `kubectl get ingress -n drupal`. Take the IP address or hostname there and enter it in your browser on a computer on the same network, and voila! You should see Drupal's installer.
 
 K3s' `kubeconfig` file is located at `/etc/rancher/k3s/k3s.yaml`. If you'd like to manage the cluster from other hosts (or using a tool like Lens), copy the contents of that file, replacing `localhost` with the IP address or hostname of the control plane node, and paste the contents into a file `~/.kube/config`.
 
