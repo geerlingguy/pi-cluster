@@ -52,9 +52,15 @@ It should respond with a 'SUCCESS' message for each node.
 >
 > It is not yet genericized for other use cases (e.g. boards that are _not_ the Turing Pi 2).
 
-To disable this behavior, you can set `storage_configure: false` in `config.yml`.
+This playbook will create a storage location on node 3 by default. You can use one of the storage configurations by switching the `storage_type` variable from `filesystem` to `zfs` in your `config.yml` file.
 
-To make sure the ZFS mirror volume is able to be created, log into node 3, and make sure your two SATA drives are wiped:
+#### Filesystem Storage
+
+If using filesystem (`storage_type: filesystem`), make sure to use the appropriate `storage_nfs_dir` variable in `config.yml`.
+
+#### ZFS Storage
+
+If using ZFS (`storage_type: zfs`, you should have two volumes available on node 3, `/dev/sda`, and `/dev/sdb`, able to be pooled into a mirror. Make sure your two SATA drives are wiped:
 
 ```
 pi@node3:~ $ sudo wipefs --all --force /dev/sda?; sudo wipefs --all --force /dev/sda
@@ -70,9 +76,15 @@ sda           8:0    0  1.8T  0 disk
 sdb           8:16   0  1.8T  0 disk 
 ```
 
-### Ceph Storage Configuration
+You should also make sure the `storage_nfs_dir` variable is set appropriately for ZFS in your `config.yml`.
+
+This ZFS layout was configured originally for the Turing Pi 2 board, which has two built-in SATA ports connected directly to node 3. In the future, the configuration may be genericized a bit better.
+
+#### Ceph Storage Configuration
 
 You could also run Ceph on a Pi cluster—see the storage configuration playbook inside the `ceph` directory.
+
+This configuration is not yet integrated into the general K3s setup.
 
 ### Cluster configuration and K3s installation
 
@@ -82,7 +94,7 @@ Run the playbook:
 ansible-playbook main.yml
 ```
 
-At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`. Alternatively, if you have SSH tunnelling configured, you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
+At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`. Alternatively, if you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
 
 You can also log into node 1, switch to the root user account (`sudo su`), then use `kubectl` to manage the cluster (e.g. view Drupal pods with `kubectl get pods -n drupal`).
 

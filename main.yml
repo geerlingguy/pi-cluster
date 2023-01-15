@@ -6,7 +6,12 @@
 
   handlers:
     - name: reboot-pi
-      reboot:
+      ansible.builtin.reboot:
+
+    - name: restart nfs
+      ansible.builtin.service:
+        name: nfs-server
+        state: restarted
 
   vars_files:
     - config.yml
@@ -39,8 +44,7 @@
 
   tasks:
     - name: Set up storage.
-      include_tasks: tasks/storage.yml
-      when: storage_configure
+      include_tasks: tasks/storage/{{ storage_type }}.yml
 
 
 - name: Configure the control plane.

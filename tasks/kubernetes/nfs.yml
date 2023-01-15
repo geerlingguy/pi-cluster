@@ -27,4 +27,4 @@
         values:
           nfs:
             server: "{{ groups['storage'][0] }}"
-            path: "/{{ storage_pool_name }}/{{ storage_nfs_share_name }}"
+            path: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}"

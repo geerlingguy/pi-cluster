@@ -1,0 +1,27 @@
+---
+- name: Ensure NFS share directory exists.
+  ansible.builtin.file:
+    dest: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}"
+    owner: root
+    group: pi
+    state: directory
+    mode: 0777
+
+- name: Ensure NFS is installed.
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: present
+
+- name: Configure NFS exports.
+  ansible.builtin.lineinfile:
+    dest: /etc/exports
+    line: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}    *(rw,sync,no_root_squash)"
+    regexp: ".*"
+    create: true
+  notify: restart nfs
+
+- name: Ensure NFS is started and enabled at boot.
+  ansible.builtin.service:
+    name: nfs-server
+    state: started
+    enabled: true

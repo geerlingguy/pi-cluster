@@ -5,8 +5,10 @@ reverse_tunnel_enable: false
 reverse_tunnel_vps_username: my-vps-username
 reverse_tunnel_vps_hostname: my-vps-hostname
 
-storage_configure: true
-storage_pool_name: zfsdata
+storage_type: filesystem  # options: 'filesystem', 'zfs'
+storage_zfs_pool_name: zfsdata
+#storage_nfs_dir: '{{ storage_zfs_pool_name }}'  # Use this for 'zfs'
+storage_nfs_dir: "srv"  # Use this for 'filesystem'
 storage_nfs_share_name: nfsshare
 
 drupal_image: drupal:9.3-apache
