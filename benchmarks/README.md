@@ -6,6 +6,12 @@ This folder contains some playbooks and guides for different types of benchmarki
 
 More benchmarks will be added over time.
 
+## Top500 High Performance Linpack (HPL)
+
+I like to run the HPL benchmark on my clusters to see where they fall in the historic [Top500 supercomputing list](https://top500.org).
+
+My automated Top500 HPL benchmark code is located in a separate repository: [Top500 Benchmark - HPL Linpack](https://github.com/geerlingguy/top500-benchmark).
+
 ## `disk-benchmark.sh`
 
 The `disk-benchmark` script is what I use to test various storage media with the Raspberry Pi.
