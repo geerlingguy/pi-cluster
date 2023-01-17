@@ -135,7 +135,7 @@ See the README file within the `benchmarks` folder.
 The safest way to shut down the cluster is to run the following command:
 
 ```
-ansible all -B 500 -P 0 -a "shutdown now" -b
+ansible all -m community.general.shutdown -b
 ```
 
 > Note: If using the SSH tunnel, you might want to run the command _first_ on nodes 2-4, _then_ on node 1. So first run `ansible 'all:!control_plane' [...]`, then run it again just for `control_plane`.
