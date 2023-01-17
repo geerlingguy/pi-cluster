@@ -103,7 +103,7 @@
   tasks:
     - name: Install K3s on nodes (takes a while).
       ansible.builtin.shell: >-
-        K3S_URL=https://"{{ groups['control_plane'][0] }}":6443
+        K3S_URL="https://{{ groups['control_plane'][0] }}:6443"
         K3S_TOKEN="{{ hostvars[groups['control_plane'][0]]['node_token'] }}"
         ~/k3s_install.sh >> ~/k3s_install_log.txt
       args:
