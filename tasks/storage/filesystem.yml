@@ -3,9 +3,17 @@
   ansible.builtin.file:
     dest: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}"
     owner: root
-    group: pi
+    group: "{{ group_name }}"
     state: directory
     mode: 0777
+
+- name: Ensure the NFS volume is mounted from "external storage".
+  ansible.posix.mount:
+    src: "{{ storage_nfs_mount_drive }}"
+    path: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}"
+    fstype: ext4
+    state: mounted
+  when: storage_nfs_mount_drive | length
 
 - name: Ensure NFS is installed.
   ansible.builtin.apt:

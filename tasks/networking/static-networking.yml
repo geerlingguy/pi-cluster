@@ -20,6 +20,23 @@
     - ../../config.yml
 
   tasks:
+    - name: Ensure dhcpcd5 is installed. # whe you're using raspbian lite, need to install dhcpcd5 manually
+      ansible.builtin.apt:
+        name: dhcpcd5
+        state: present
+
+    # - name: Disable dns and change to unmanaged in NetworkManager
+    # - Edit the NetworkManager Configuration File
+    # https://devicetests.com/stop-network-manager-updating-resolv-conf
+    # 
+    # 1 - sudo nano /etc/NetworkManager/NetworkManager.conf
+    # [main]
+    #   dns=none
+    #   rc-manager=unmanaged
+    
+    # 2 - sudo nano /etc/dhcpcd.conf
+    # option domain_name_servers, domain_name, REMOVE THIS opt  domain_search
+
     - name: Configure static IP address on each node.
       ansible.builtin.blockinfile:
         path: /etc/dhcpcd.conf
@@ -37,10 +54,11 @@
         path: /etc/hosts
         marker: "# ANSIBLE MANAGED - static ip config {mark}"
         block: |
-          {{ ipv4_subnet_prefix }}.1  node1.local node1
-          {{ ipv4_subnet_prefix }}.2  node2.local node2
-          {{ ipv4_subnet_prefix }}.3  node3.local node3
-          {{ ipv4_subnet_prefix }}.4  node4.local node4
+          {{ ipv4_subnet_prefix }}.61  node1.local node1
+          {{ ipv4_subnet_prefix }}.62  node2.local node2
+          {{ ipv4_subnet_prefix }}.63  node3.local node3
+
+    # {{ ipv4_subnet_prefix }}.4  node4.local node4
 
     - name: Set active Internet gateway interface on control plane.
       ansible.builtin.blockinfile:
