@@ -28,7 +28,7 @@
     owner: root
 #    group: pi
 # Don't hard-code the group
-    group: {{ ansible_user }}
+    group: "{{ ansible_user }}"
     mode: 0777
 
 - name: Check if sharenfs is enabled on ZFS NFS share.
