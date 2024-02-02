@@ -13,7 +13,7 @@
     path: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}"
     fstype: ext4
     state: mounted
-  when: storage_nfs_mount_drive | length
+  when: storage_nfs_mount_drive_enable
 
 - name: Ensure NFS is installed.
   ansible.builtin.apt:

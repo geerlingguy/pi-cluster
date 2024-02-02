@@ -25,15 +25,25 @@
         name: dhcpcd5
         state: present
 
+    - name: Deactivated the IPv6 to not use wrong domain search Greatek.
+      ansible.builtin.blockinfile:
+        path: /etc/sysctl.conf
+        marker: "# ANSIBLE MANAGED - deactivated the IPv6"
+        block: |
+          net.ipv6.conf.all.disable_ipv6 = 1
+          net.ipv6.conf.default.disable_ipv6 = 1
+          net.ipv6.conf.lo.disable_ipv6 = 1
+
     # - name: Disable dns and change to unmanaged in NetworkManager
     # - Edit the NetworkManager Configuration File
     # https://devicetests.com/stop-network-manager-updating-resolv-conf
-    # 
-    # 1 - sudo nano /etc/NetworkManager/NetworkManager.conf
+    #
+    # 1 - sudo nano /etc/NetworkManager/NetworkManager.conf # added these lines below to the [main] section:
     # [main]
+    #   ...
     #   dns=none
     #   rc-manager=unmanaged
-    
+
     # 2 - sudo nano /etc/dhcpcd.conf
     # option domain_name_servers, domain_name, REMOVE THIS opt  domain_search
 
@@ -57,8 +67,7 @@
           {{ ipv4_subnet_prefix }}.61  node1.local node1
           {{ ipv4_subnet_prefix }}.62  node2.local node2
           {{ ipv4_subnet_prefix }}.63  node3.local node3
-
-    # {{ ipv4_subnet_prefix }}.4  node4.local node4
+          {{ ipv4_subnet_prefix }}.64  node4.local node4
 
     - name: Set active Internet gateway interface on control plane.
       ansible.builtin.blockinfile:
