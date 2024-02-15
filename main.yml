@@ -19,7 +19,7 @@
   tasks:
     - name: Ensure cgroups are configured correctly in cmdline.txt.
       ansible.builtin.replace:
-        path: /boot/cmdline.txt
+        path: /boot/firmware/cmdline.txt
         regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
         replace: '\1 {{ item }}'
       with_items:
