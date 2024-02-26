@@ -1,3 +1,4 @@
 ---
 # Set to 'pi' for Raspberry Pi OS.
-ansible_user: pi
+# ansible_user: pi
+# I prefer to set this in the hosts.ini file

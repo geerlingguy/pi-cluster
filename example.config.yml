@@ -1,5 +1,7 @@
 ---
-ipv4_subnet_prefix: "10.1.1"
+#ipv4_subnet_prefix: "10.1.1"
+# I prefer to set the prefix in the hosts.ini file
+
 active_internet_interface: "wlan0"
 reverse_tunnel_enable: false
 reverse_tunnel_vps_username: my-vps-username
