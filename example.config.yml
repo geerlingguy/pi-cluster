@@ -1,20 +1,24 @@
 ---
-ipv4_subnet_prefix: "10.1.1"
-active_internet_interface: "wlan0"
-reverse_tunnel_enable: false
-reverse_tunnel_vps_username: my-vps-username
-reverse_tunnel_vps_hostname: my-vps-hostname
-
+# Cluster storage options.
 storage_type: filesystem  # options: 'filesystem', 'zfs'
 storage_zfs_pool_name: zfsdata
 #storage_nfs_dir: '{{ storage_zfs_pool_name }}'  # Use this for 'zfs'
 storage_nfs_dir: "srv"  # Use this for 'filesystem'
 storage_nfs_share_name: nfsshare
 
-drupal_image: drupal:9.3-apache
+# Drupal installation options.
+drupal_image: drupal:10.2-apache
 drupal_hash_salt: OTk4MTYzYWI4N2E2MGIxNjlmYmQ2MTA4
 drupal_trusted_host_patterns: '^.+$'
 drupal_database_password: 'drupal'
 drupal_base_web_path: '/var/www/html/sites/default/'
 drupal_config_sync_directory: 'sites/default/files/config_OTk4MTYzY'
 drupal_extra_settings_php: ''
+
+# These networking variables are only necessary if using optional static and
+# remote networking features in the `tasks/networking` playbooks.
+ipv4_subnet_prefix: "10.1.1"
+active_internet_interface: "wlan0"
+reverse_tunnel_enable: false
+reverse_tunnel_vps_username: my-vps-username
+reverse_tunnel_vps_hostname: my-vps-hostname
