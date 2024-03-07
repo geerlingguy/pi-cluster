@@ -11,6 +11,18 @@
   gather_facts: false
   become: true
 
+  handlers:
+    - name: restart dhcpcd
+      ansible.builtin.service:
+        name: dhcpcd
+        state: restarted
+
+    - name: restart autossh
+      ansible.builtin.systemd:
+        name: autossh
+        state: restarted
+      when: reverse_tunnel_enable
+
   vars_files:
     - ../../config.yml
 
@@ -61,3 +73,16 @@
         name: autossh
         state: started
         enabled: true
+
+    - name: Set active Internet gateway interface on control plane.
+      ansible.builtin.blockinfile:
+        path: /etc/dhcpcd.conf
+        marker: "# ANSIBLE MANAGED - Internet routing metric {mark}"
+        block: |
+          interface {{ active_internet_interface }}
+          metric 100
+      delegate_to: "{{ groups['control_plane'][0] }}"
+      run_once: true
+      notify:
+        - restart dhcpcd
+        - restart autossh

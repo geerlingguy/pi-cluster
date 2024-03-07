@@ -6,21 +6,25 @@
 
   handlers:
     - name: restart dhcpcd
-      service:
+      ansible.builtin.service:
         name: dhcpcd
         state: restarted
 
-    - name: restart autossh
-      ansible.builtin.systemd:
-        name: autossh
+    - name: restart networkmanager
+      ansible.builtin.service:
+        name: NetworkManager
         state: restarted
-      when: reverse_tunnel_enable
 
   vars_files:
     - ../../config.yml
 
   tasks:
-    - name: Configure static IP address on each node.
+    - name: Check if using dhcpcd for networking.
+      ansible.builtin.stat:
+        path: /etc/dhcpcd.conf
+      register: dhcpcd_file_result
+
+    - name: Configure static IP address (dhcpcd).
       ansible.builtin.blockinfile:
         path: /etc/dhcpcd.conf
         marker: "# ANSIBLE MANAGED - static ip {mark}"
@@ -30,27 +34,24 @@
           static routers={{ ipv4_subnet_prefix }}.1
           static domain_name_servers={{ ipv4_subnet_prefix }}.1
       notify: restart dhcpcd
+      when: dhcpcd_file_result.stat.exists
 
-    # TODO: This doesn't use hosts as defined in inventory. Convert to template?
+    - name: Configure static IP address (Network Manager).
+      community.general.nmcli:
+        conn_name: "Wired connection 1"
+        ifname: eth0
+        type: ethernet
+        ip4: "{{ ipv4_subnet_prefix }}.{{ ip_host_octet }}/24"
+        gw4: "{{ ipv4_gateway }}"
+        state: present
+      notify: restart networkmanager
+      when: not dhcpcd_file_result.stat.exists
+
     - name: Configure hosts file so nodes can see each other by hostname.
       ansible.builtin.blockinfile:
         path: /etc/hosts
         marker: "# ANSIBLE MANAGED - static ip config {mark}"
         block: |
-          {{ ipv4_subnet_prefix }}.1  node1.local node1
-          {{ ipv4_subnet_prefix }}.2  node2.local node2
-          {{ ipv4_subnet_prefix }}.3  node3.local node3
-          {{ ipv4_subnet_prefix }}.4  node4.local node4
-
-    - name: Set active Internet gateway interface on control plane.
-      ansible.builtin.blockinfile:
-        path: /etc/dhcpcd.conf
-        marker: "# ANSIBLE MANAGED - Internet routing metric {mark}"
-        block: |
-          interface {{ active_internet_interface }}
-          metric 100
-      delegate_to: "{{ groups['control_plane'][0] }}"
-      run_once: true
-      notify:
-        - restart dhcpcd
-        - restart autossh
+          {% for host in groups['cluster'] %}
+          {{ ipv4_subnet_prefix }}.{{ hostvars[host].ip_host_octet }} {{ host }} {{ host | regex_replace('\.local', '') }}
+          {% endfor %}
