@@ -23,7 +23,7 @@
     - name: Ensure dhcpcd5 is installed. # whe you're using raspbian lite, need to install dhcpcd5 manually
       ansible.builtin.apt:
         name: dhcpcd5
-        state: present
+        state: absent
 
     - name: Deactivated the IPv6 to not use wrong domain search Greatek.
       ansible.builtin.blockinfile:
@@ -47,16 +47,29 @@
     # 2 - sudo nano /etc/dhcpcd.conf
     # option domain_name_servers, domain_name, REMOVE THIS opt  domain_search
 
+    # - name: Configure static IP address on each node.
+    #   ansible.builtin.blockinfile:
+    #     path: /etc/dhcpcd.conf
+    #     marker: "# ANSIBLE MANAGED - static ip {mark}"
+    #     block: |
+    #       interface eth0
+    #       static ip_address={{ ipv4_subnet_prefix }}.{{ ip_host_octet }}/24
+    #       static routers={{ ipv4_subnet_prefix }}.1
+    #       static domain_name_servers={{ ipv4_subnet_prefix }}.1
+    #   notify: restart dhcpcd
+
     - name: Configure static IP address on each node.
       ansible.builtin.blockinfile:
-        path: /etc/dhcpcd.conf
+        path: /etc/network/interfaces.d/eth0
         marker: "# ANSIBLE MANAGED - static ip {mark}"
         block: |
-          interface eth0
-          static ip_address={{ ipv4_subnet_prefix }}.{{ ip_host_octet }}/24
-          static routers={{ ipv4_subnet_prefix }}.1
-          static domain_name_servers={{ ipv4_subnet_prefix }}.1
-      notify: restart dhcpcd
+          auto eth0
+          allow-hotplug eth0
+          iface eth0 inet static
+          address {{ ipv4_subnet_prefix }}.{{ ip_host_octet }}
+          netmask {{ ipv4_subnet_netmask }}
+          gateway {{ ipv4_subnet_prefix }}.1
+        create: true
 
     # TODO: This doesn't use hosts as defined in inventory. Convert to template?
     - name: Configure hosts file so nodes can see each other by hostname.
@@ -69,15 +82,15 @@
           {{ ipv4_subnet_prefix }}.63  node3.local node3
           {{ ipv4_subnet_prefix }}.64  node4.local node4
 
-    - name: Set active Internet gateway interface on control plane.
-      ansible.builtin.blockinfile:
-        path: /etc/dhcpcd.conf
-        marker: "# ANSIBLE MANAGED - Internet routing metric {mark}"
-        block: |
-          interface {{ active_internet_interface }}
-          metric 100
-      delegate_to: "{{ groups['control_plane'][0] }}"
-      run_once: true
-      notify:
-        - restart dhcpcd
-        - restart autossh
+    # - name: Set active Internet gateway interface on control plane.
+    #   ansible.builtin.blockinfile:
+    #     path: /etc/dhcpcd.conf
+    #     marker: "# ANSIBLE MANAGED - Internet routing metric {mark}"
+    #     block: |
+    #       interface {{ active_internet_interface }}
+    #       metric 100
+    #   delegate_to: "{{ groups['control_plane'][0] }}"
+    #   run_once: true
+    #   notify:
+    #     - restart dhcpcd
+    #     - restart autossh
