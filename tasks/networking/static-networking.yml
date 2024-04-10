@@ -23,20 +23,6 @@
       ansible.builtin.stat:
         path: /etc/dhcpcd.conf
       register: dhcpcd_file_result
-      
-    - name: Configure static IP address (via interfaces eth0).
-      ansible.builtin.blockinfile:
-        path: /etc/network/interfaces.d/eth0
-        marker: "# ANSIBLE MANAGED - static ip {mark}"
-        block: |
-          auto eth0
-          allow-hotplug eth0
-          iface eth0 inet static
-          address {{ ipv4_subnet_prefix }}.{{ ip_host_octet }}
-          netmask {{ ipv4_subnet_netmask }}
-          gateway {{ ipv4_subnet_prefix }}.1
-        create: true
-      when: not dhcpcd_file_result.stat.exists
 
     - name: Configure static IP address (dhcpcd).
       ansible.builtin.blockinfile:

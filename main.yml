@@ -40,6 +40,7 @@
         dest: "~/k3s_install.sh"
         mode: a+x
 
+
 - name: Configure storage node.
   hosts: storage
   gather_facts: false
@@ -57,6 +58,7 @@
   tasks:
     - name: Set up storage.
       include_tasks: tasks/storage/{{ storage_type }}.yml
+
 
 - name: Configure the control plane.
   hosts: control_plane
@@ -118,6 +120,7 @@
         state: present
       become: true
 
+
 - name: Configure the worker nodes.
   hosts: nodes
   gather_facts: false
@@ -138,15 +141,16 @@
 
 - name: Set up Helm.
   import_playbook: tasks/kubernetes/helm.yml
-  tags: ["helm"]
+  tags: ['helm']
 
 - name: Set up NFS PVCs.
   import_playbook: tasks/kubernetes/nfs.yml
-  tags: ["nfs"]
+  tags: ['nfs']
 
 - name: Set up Prometheus.
   import_playbook: tasks/kubernetes/prometheus.yml
-  tags: ["prometheus"]
+  tags: ['prometheus']
+
 # - name: Set up Drupal.
 #   import_playbook: tasks/kubernetes/drupal.yml
 #   tags: ['drupal']
