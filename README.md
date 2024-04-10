@@ -48,10 +48,6 @@ It should respond with a 'SUCCESS' message for each node.
 
 ### Storage Configuration
 
-> **Warning**: This playbook is configured to set up a ZFS mirror volume on node 3, with two drives connected to the built-in SATA ports on the Turing Pi 2.
->
-> It is not yet genericized for other use cases (e.g. boards that are _not_ the Turing Pi 2).
-
 This playbook will create a storage location on node 3 by default. You can use one of the storage configurations by switching the `storage_type` variable from `filesystem` to `zfs` in your `config.yml` file.
 
 #### Filesystem Storage
@@ -96,7 +92,9 @@ ansible-playbook main.yml
 
 At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`.
 
-Alternatively, if you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
+> If the playbook stalls while installing K3s, you might need to configure static IP addresses for the nodes, especially if using mDNS (like with `.local` names for the nodes). Follow the guide in "Static network configuration" then run the `main.yml` playbook again afterwards, and it should get things in order.
+
+If you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
 
 You can also log into node 1, switch to the root user account (`sudo su`), then use `kubectl` to manage the cluster (e.g. view Drupal pods with `kubectl get pods -n drupal`).
 

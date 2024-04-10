@@ -1,7 +1,7 @@
 ---
 - name: Set up cluster-wide configuration.
   hosts: cluster
-  gather_facts: false
+  gather_facts: true
   become: true
 
   handlers:
@@ -14,13 +14,25 @@
   tasks:
     - name: Ensure cgroups are configured correctly in cmdline.txt.
       ansible.builtin.replace:
-        path: /boot/cmdline.txt
+        path: /boot/firmware/cmdline.txt
         regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
         replace: '\1 {{ item }}'
       with_items:
         - "cgroup_memory=1"
         - "cgroup_enable=memory"
       notify: reboot-pi
+      when: ansible_distribution == 'Debian'
+
+    - name: Ensure cgroups are configured correctly in ubuntuEnv.txt.
+      ansible.builtin.replace:
+        path: /boot/firmware/ubuntuEnv.txt
+        regexp: '^(bootargs=[\w](?!.*\b{{ item }}\b).*)$'
+        replace: '\1 {{ item }}'
+      with_items:
+        - "cgroup_memory=1"
+        - "cgroup_enable=memory"
+      notify: reboot-pi
+      when: ansible_distribution == 'Ubuntu'
 
     - name: Download K3s install script.
       ansible.builtin.get_url:
@@ -90,6 +102,12 @@
           - golang
           - git
         state: present
+      become: true
+
+    - name: Ignore PEP 668 because it's silly.
+      ansible.builtin.file:
+        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
+        state: absent
       become: true
 
     - name: Ensure required Python libraries are installed.
