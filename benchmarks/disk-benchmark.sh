@@ -99,12 +99,8 @@ printf "\n"
 #   --eta-newline=1
 # printf "\n"
 
-printf "Running iozone 1024K random read and write tests...\n"
-./iozone -e -I -a -s 100M -r 1024k -i 0 -i 2 -f $DEVICE_MOUNT_PATH/iozone
-printf "\n"
-
-printf "Running iozone 4K random read and write tests...\n"
-./iozone -e -I -a -s 100M -r 4k -i 0 -i 2 -f $DEVICE_MOUNT_PATH/iozone
+printf "Running iozone 4K / 1024K read and write tests...\n"
+./iozone -e -I -a -s 100M -r 4k -r 1024k -i 0 -i 1 -i 2 -f $DEVICE_MOUNT_PATH/iozone | cut -c7-78 | tail -n6 | head -n4
 printf "\n"
 
 printf "Disk benchmark complete!\n\n"
