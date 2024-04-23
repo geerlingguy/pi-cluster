@@ -40,6 +40,11 @@
         dest: "~/k3s_install.sh"
         mode: a+x
 
+    - name: Install required dependencies
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+
 
 - name: Configure storage node.
   hosts: storage
