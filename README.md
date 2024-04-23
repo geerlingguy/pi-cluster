@@ -156,6 +156,14 @@ ansible-playbook networking.yml
 
 After running the playbook, until a reboot, the Pis will still be accessible over their former DHCP-assigned IP address. After rebooting, the nodes will be accessible on their new IP addresses.
 
+You can reboot all the nodes with:
+
+```
+ansible all -m reboot -b
+```
+
+> If you are running Ubuntu, and you get an error like `"Failed to find required executable "nmcli"`, run the `ubuntu-setup.yml` playbook: `ansible-playbook tasks/networking/ubuntu-prep.yml`
+
 #### If using a different subnet
 
 If you chose a different subnet than your LAN, make sure your workstation is connected to an interface on the same subnet as the cluster (e.g. `10.1.1.x`).

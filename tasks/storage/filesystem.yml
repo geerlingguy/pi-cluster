@@ -3,7 +3,7 @@
   ansible.builtin.file:
     dest: "/{{ storage_nfs_dir }}/{{ storage_nfs_share_name }}"
     owner: root
-    group: pi
+    group: "{{ ansible_user }}"
     state: directory
     mode: 0777
 
