@@ -20,6 +20,17 @@ As a rule of thumb, NVMe devices will max out the Pi's PCIe bus (around 400 MB/s
 
 See the `disk-benchmark.sh` comments for usage examples.
 
+## `drupal-benchmark.sh`
+
+The `drupal-benchmark` script runs two types of load tests on the Drupal instance running on the cluster:
+
+  - `wrk` anonymous load test: Tests the performance of completely cacheable page loads as an anonymous user.
+  - `ab` authenticated load test: Tests the performance of partially-cacheable page loads as an authenticated user.
+
+Drupal 10 and later have fairly robust caching in place to make both of these scenarios fairly fast even on a single modern SBC. But it is useful as an end-to-end performance test, from ingress and cluster networking all the way down to Drupal's separate database and persistent volume storage performance.
+
+See the `drupal-benchmark.sh` comments for usage examples.
+
 ## `stress-ng`
 
 The `stress.yml` playbook hammers all CPU cores on all nodes simultaneously. This can be useful to measure the maximum power draw under CPU load, and to test whether the Pis in the cluster are getting enough power to run stably (especially when overclocked).
