@@ -7,16 +7,16 @@ set -e
 # for my YouTube channel.
 #
 # Usage:
-#   # Run it locally (overriding device and mount path).
-#   $ sudo DEVICE_UNDER_TEST=/dev/sda1 DEVICE_MOUNT_PATH=/mnt/sda1 ./disk-benchmark.sh
+#   # Run it locally (overriding mount path and test size).
+#   $ sudo MOUNT_PATH=/mnt/sda1 TEST_SIZE=1g ./disk-benchmark.sh
 #
 #   # Run it straight from GitHub (with default options).
 #   $ curl https://raw.githubusercontent.com/geerlingguy/pi-cluster/master/benchmarks/disk-benchmark.sh | sudo bash
 #
-# Author: Jeff Geerling, 2023
+# Author: Jeff Geerling, 2024
 
 printf "\n"
-printf "Raspberry Pi disk benchmarks\n"
+printf "Disk benchmarks\n"
 
 # Fail if $SUDO_USER is empty.
 if [ -z "$SUDO_USER" ]; then
@@ -25,20 +25,15 @@ if [ -z "$SUDO_USER" ]; then
 fi
 
 # Variables.
-DEVICE_UNDER_TEST=${DEVICE_UNDER_TEST:-"/dev/sda1"}
-DEVICE_MOUNT_PATH=${DEVICE_MOUNT_PATH:-"/mnt/sda1"}
+MOUNT_PATH=${MOUNT_PATH:-"/mnt/sda"}
 USER_HOME_PATH=$(getent passwd $SUDO_USER | cut -d: -f6)
+TEST_SIZE="100m"
 IOZONE_INSTALL_PATH=$USER_HOME_PATH
 IOZONE_VERSION=iozone3_492
 
 cd $IOZONE_INSTALL_PATH
 
 # Install dependencies.
-if [ ! `which fio` ]; then
-  printf "Installing fio...\n"
-  apt-get install -y fio
-  printf "Install complete!\n\n"
-fi
 if [ ! `which curl` ]; then
   printf "Installing curl...\n"
   apt-get install -y curl
@@ -61,46 +56,31 @@ else
   cd $IOZONE_VERSION/src/current
 fi
 
-# Run benchmarks.
-printf "Running fio sequential read test...\n"
-fio \
-  --filename=$DEVICE_UNDER_TEST \
-  --direct=1 \
-  --rw=read \
-  --bs=1024k \
-  --ioengine=libaio \
-  --iodepth=64 \
-  --size=4G \
-  --runtime=10 \
-  --numjobs=4 \
-  --group_reporting \
-  --name=fio-rand-read-sequential \
-  --eta-newline=1 \
-  --readonly
+printf "Running iozone 4K / 1024K read and write tests...\n"
+iozone_result=$(./iozone -e -I -a -s $TEST_SIZE -r 4k -r 1024k -i 0 -i 1 -i 2 -f $MOUNT_PATH/iozone | cut -c7-78 | tail -n6 | head -n4)
+echo -e "$iozone_result"
 printf "\n"
 
-# This test is destructive to a mounted volume.
-# printf "Running fio sequential write test...\n"
-# fio \
-#   --filename=$DEVICE_UNDER_TEST \
-#   --sync=0 \
-#   --do_verify=0 \
-#   --direct=1 \
-#   --rw=write \
-#   --allow_mounted_write=1 \
-#   --bs=1024k \
-#   --ioengine=libaio \
-#   --iodepth=64 \
-#   --size=4G \
-#   --runtime=10 \
-#   --numjobs=4 \
-#   --group_reporting \
-#   --name=fio-rand-read-sequential \
-#   --eta-newline=1
-# printf "\n"
+random_read_4k=$(echo -e "$iozone_result" | awk 'FNR == 3 {printf "%.2f", $7/(1024)}')
+random_write_4k=$(echo -e "$iozone_result" | awk 'FNR == 3 {printf "%.2f", $8/(1024)}')
+random_read_1024k=$(echo -e "$iozone_result" | awk 'FNR == 4 {printf "%.2f", $7/(1024)}')
+random_write_1024k=$(echo -e "$iozone_result" | awk 'FNR == 4 {printf "%.2f", $8/(1024)}')
+sequential_read_1024k=$(echo -e "$iozone_result" | awk 'FNR == 4 {printf "%.2f", $6/(1024)}')
+sequential_write_1024k=$(echo -e "$iozone_result" | awk 'FNR == 4 {printf "%.2f", $4/(1024)}')
+cat << EOF
+# --- Copy and paste the result below ---
 
-printf "Running iozone 4K / 1024K read and write tests...\n"
-./iozone -e -I -a -s 100M -r 4k -r 1024k -i 0 -i 1 -i 2 -f $DEVICE_MOUNT_PATH/iozone
+| Benchmark                  | Result |
+| -------------------------- | ------ |
+| iozone 4K random read      | $random_read_4k MB/s |
+| iozone 4K random write     | $random_write_4k MB/s |
+| iozone 1M random read      | $random_read_1024k MB/s |
+| iozone 1M random write     | $random_write_1024k MB/s |
+| iozone 1M sequential read  | $sequential_read_1024k MB/s |
+| iozone 1M sequential write | $sequential_write_1024k MB/s |
+
+# --- End result ---
+EOF
 printf "\n"
 
 printf "Disk benchmark complete!\n\n"
