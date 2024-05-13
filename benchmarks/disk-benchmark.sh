@@ -50,11 +50,13 @@ if [ ! -f $IOZONE_INSTALL_PATH/$IOZONE_VERSION/src/current/iozone ]; then
   printf "Installing iozone...\n"
   curl "http://www.iozone.org/src/current/$IOZONE_VERSION.tar" | tar -x
   cd $IOZONE_VERSION/src/current
-  if [[ $(uname -m) == 'arm64' ]]; then
-    make --quiet linux-arm
-  else
-    make --quiet linux-AMD64
-  fi
+  case $(uname -m) in
+    arm64|aarch64)
+      make --quiet linux-arm
+      ;;
+    *)
+      make --quiet linux-AMD64
+  esac
   printf "Install complete!\n\n"
 else
   cd $IOZONE_VERSION/src/current
