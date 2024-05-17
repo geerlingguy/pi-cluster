@@ -25,7 +25,7 @@ if [ -z "$SUDO_USER" ]; then
 fi
 
 # Variables.
-MOUNT_PATH=${MOUNT_PATH:-"/mnt/sda"}
+MOUNT_PATH=${MOUNT_PATH:-"/"}
 USER_HOME_PATH=$(getent passwd $SUDO_USER | cut -d: -f6)
 TEST_SIZE="100m"
 IOZONE_INSTALL_PATH=$USER_HOME_PATH
