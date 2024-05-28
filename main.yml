@@ -108,10 +108,10 @@
       become: true
 
     - name: Ensure required Python libraries are installed.
-      ansible.builtin.pip:
+      ansible.builtin.package:
         name:
-          - openshift
-          - pyyaml
+          - python3-openshift
+          - python3-yaml
         state: present
       become: true
 
