@@ -1,0 +1,23 @@
+---
+# DeskPi Super 6C (CM4) Configuration
+ipv4_subnet_prefix: "10.0.2"
+ipv4_gateway: "10.0.2.1"
+dns4_servers: "{{ ipv4_gateway }}"
+reverse_tunnel_enable: false
+control_plane_router_setup: false
+
+# Cluster storage options.
+storage_type: filesystem  # options: 'filesystem', 'zfs'
+storage_zfs_pool_name: zfsdata
+#storage_nfs_dir: '{{ storage_zfs_pool_name }}'  # Use this for 'zfs'
+storage_nfs_dir: "srv"  # Use this for 'filesystem'
+storage_nfs_share_name: nfsshare
+
+# Drupal installation options.
+drupal_image: drupal:10.2-apache
+drupal_hash_salt: OTk4MTYzYWI4N2E2MGIxNjlmYmQ2MTA4
+drupal_trusted_host_patterns: '^.+$'
+drupal_database_password: 'drupal'
+drupal_base_web_path: '/var/www/html/sites/default/'
+drupal_config_sync_directory: 'sites/default/files/config_OTk4MTYzY'
+drupal_extra_settings_php: ''
