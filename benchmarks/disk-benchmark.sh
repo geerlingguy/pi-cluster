@@ -63,7 +63,7 @@ else
 fi
 
 printf "Running iozone 4K / 1024K read and write tests...\n"
-iozone_result=$(./iozone -e -I -a -s $TEST_SIZE -r 4k -r 1024k -i 0 -i 1 -i 2 -f $MOUNT_PATH/iozone | cut -c7-78 | tail -n6 | head -n4)
+iozone_result=$(./iozone -e -I -a -s $TEST_SIZE -r 4k -r 1024k -i 0 -i 1 -i 2 -f $MOUNT_PATH/iozone | cut -c7-100 | tail -n6 | head -n4)
 echo -e "$iozone_result"
 printf "\n"
 
