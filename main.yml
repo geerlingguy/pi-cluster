@@ -95,6 +95,8 @@
         name:
           - python3-pip
           - python3-setuptools
+          - python3-openshift
+          - python3-yaml
           - build-essential
           - golang
           - git
@@ -105,14 +107,6 @@
       ansible.builtin.file:
         path: /usr/lib/python3.11/EXTERNALLY-MANAGED
         state: absent
-      become: true
-
-    - name: Ensure required Python libraries are installed.
-      ansible.builtin.package:
-        name:
-          - python3-openshift
-          - python3-yaml
-        state: present
       become: true
 
 
