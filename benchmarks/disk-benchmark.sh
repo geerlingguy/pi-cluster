@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Raspberry Pi HDD/SDD benchmark script.
+# Disk benchmark script.
 #
 # A script I use to automate the running and reporting of benchmarks I compile
 # for my YouTube channel.
@@ -27,9 +27,9 @@ fi
 # Variables.
 MOUNT_PATH=${MOUNT_PATH:-"/"}
 USER_HOME_PATH=$(getent passwd $SUDO_USER | cut -d: -f6)
-TEST_SIZE="100m"
+TEST_SIZE=${TEST_SIZE:-"1g"}
 IOZONE_INSTALL_PATH=$USER_HOME_PATH
-IOZONE_VERSION=iozone3_492
+IOZONE_VERSION=iozone3_506
 
 cd $IOZONE_INSTALL_PATH
 
@@ -63,7 +63,7 @@ else
 fi
 
 printf "Running iozone 4K / 1024K read and write tests...\n"
-iozone_result=$(./iozone -e -I -a -s $TEST_SIZE -r 4k -r 1024k -i 0 -i 1 -i 2 -f $MOUNT_PATH/iozone | cut -c7-78 | tail -n6 | head -n4)
+iozone_result=$(./iozone -e -I -a -s $TEST_SIZE -r 4k -r 1024k -i 0 -i 1 -i 2 -f $MOUNT_PATH/iozone | cut -c7-100 | tail -n6 | head -n4)
 echo -e "$iozone_result"
 printf "\n"
 

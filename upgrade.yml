@@ -12,7 +12,7 @@
     - name: Check if a reboot is required.
       stat:
         path: /var/run/reboot-required
-        get_md5: no
+        get_checksum: false
       register: reboot_required_file
 
     - name: Reboot the server (if required).
@@ -21,4 +21,4 @@
 
     - name: Remove dependencies that are no longer required.
       apt:
-        autoremove: yes
+        autoremove: true

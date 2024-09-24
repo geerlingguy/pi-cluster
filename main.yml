@@ -12,9 +12,21 @@
     - config.yml
 
   tasks:
+    - name: Account for Bullseye to Bookworm changes
+      block:
+        - name: Set Bookworm subdirectory
+          set_fact:
+            sub_dir_12: "firmware/" 
+          when: ansible_distribution_major_version >= "12"
+        
+        - name: Set Bullseye (and before) sub-directory
+          set_fact:
+            sub_dir_12: ""
+          when: ansible_distribution_major_version <= "11" 
+
     - name: Ensure cgroups are configured correctly in cmdline.txt.
       ansible.builtin.replace:
-        path: /boot/firmware/cmdline.txt
+        path: /boot/{{ sub_dir_12 }}cmdline.txt
         regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
         replace: '\1 {{ item }}'
       with_items:
@@ -95,6 +107,8 @@
         name:
           - python3-pip
           - python3-setuptools
+          - python3-openshift
+          - python3-yaml
           - build-essential
           - golang
           - git
@@ -105,14 +119,6 @@
       ansible.builtin.file:
         path: /usr/lib/python3.11/EXTERNALLY-MANAGED
         state: absent
-      become: true
-
-    - name: Ensure required Python libraries are installed.
-      ansible.builtin.pip:
-        name:
-          - openshift
-          - pyyaml
-        state: present
       become: true
 
 
