@@ -12,28 +12,30 @@
     - config.yml
 
   tasks:
-    - name: Account for Bullseye to Bookworm changes
+    - name: Boot changes in Debian systems
       block:
-        - name: Set Bookworm subdirectory
+        - name: For Bullseye (and before) no boot sub-directory
           set_fact:
-            sub_dir_12: "firmware/" 
-          when: ansible_distribution_major_version >= "12"
-        
-        - name: Set Bullseye (and before) sub-directory
-          set_fact:
-            sub_dir_12: ""
+            sub_dir: ""
           when: ansible_distribution_major_version <= "11" 
 
-    - name: Ensure cgroups are configured correctly in cmdline.txt.
-      ansible.builtin.replace:
-        path: /boot/{{ sub_dir_12 }}cmdline.txt
-        regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
-        replace: '\1 {{ item }}'
-      with_items:
-        - "cgroup_memory=1"
-        - "cgroup_enable=memory"
-      notify: reboot-pi
+        - name: For Bookworm add a boot sub-directory
+          set_fact:
+            sub_dir: "firmware/" 
+          when: ansible_distribution_major_version >= "12"
+        
+        - name: Ensure cgroups are configured correctly.
+          ansible.builtin.replace:
+            path: /boot/{{ sub_dir }}cmdline.txt
+            regexp: '^([\w](?!.*\b{{ item }}\b).*)$'
+            replace: '\1 {{ item }}'
+          with_items:
+            - "cgroup_memory=1"
+            - "cgroup_enable=memory"
+          notify: reboot-pi
+
       when: ansible_distribution == 'Debian'
+
 
     - name: Ensure cgroups are configured correctly in ubuntuEnv.txt.
       ansible.builtin.replace:
