@@ -21,7 +21,7 @@
 
         - name: For Bookworm add a boot sub-directory
           set_fact:
-            sub_dir: "firmware/" 
+            sub_dir: "firmware/"
           when: ansible_distribution_major_version >= "12"
         
         - name: Ensure cgroups are configured correctly.
@@ -35,7 +35,6 @@
           notify: reboot-pi
 
       when: ansible_distribution == 'Debian'
-
 
     - name: Ensure cgroups are configured correctly in ubuntuEnv.txt.
       ansible.builtin.replace:
