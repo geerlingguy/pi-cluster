@@ -22,8 +22,8 @@ printf "\n"
 printf "Drupal benchmarks.\n"
 
 # Variables. Best to use IP address to prevent `ab` errors.
-DRUPAL_URL="http://10.0.2.41/"
-AUTHENTICATED_SESSION_COOKIE="SESS6e9bdcaa1bb8e81ee7ccc64c8cbd9919=x2tDrABmKKFCGZzNw-JEPPtFoR397NNQykTHXKZpJ9GIevki"
+DRUPAL_URL="http://10.0.2.61/"
+AUTHENTICATED_SESSION_COOKIE="SESS3747f176b3220dbe6938dbbc37681fd0=VsCYFTA3-5A16oYGR%2Cer%2C7-wm53P3wLnN8ZKIlVmnyHqfR2D"
 # Install dependencies.
 if [ ! `which ab` ]; then
   printf "Please install apachebench (ab) and try again.\n\n"

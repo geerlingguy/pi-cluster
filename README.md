@@ -92,7 +92,7 @@ ansible-playbook main.yml
 
 At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`.
 
-> If the playbook stalls while installing K3s, you might need to configure static IP addresses for the nodes, especially if using mDNS (like with `.local` names for the nodes). Follow the guide in "Static network configuration" then run the `main.yml` playbook again afterwards, and it should get things in order.
+> If the playbook stalls while installing K3s, [you might need to configure static IP addresses](https://github.com/geerlingguy/pi-cluster/issues/11#issuecomment-1983874999) for the nodes, especially if using mDNS (like with `.local` names for the nodes). Follow the guide in "Static network configuration" then run the `main.yml` playbook again afterwards, and it should get things in order.
 
 If you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
 
