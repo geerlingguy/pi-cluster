@@ -27,3 +27,7 @@
         values:
           alertmanager:
             enabled: false
+          grafana:
+            service:
+              type: NodePort
+              nodePort: 30080
