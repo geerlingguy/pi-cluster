@@ -40,6 +40,15 @@
         dest: "~/k3s_install.sh"
         mode: a+x
 
+    - name: Populate /etc/environment
+      lineinfile:
+        path: "/etc/environment"
+        state: present
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value}}"
+      with_items: "{{ os_environment }}"
+      become: true
+      no_log: true
 
 - name: Configure storage node.
   hosts: storage
@@ -58,7 +67,6 @@
   tasks:
     - name: Set up storage.
       include_tasks: tasks/storage/{{ storage_type }}.yml
-
 
 - name: Configure the control plane.
   hosts: control_plane
@@ -84,6 +92,7 @@
     - name: Set node_token fact.
       ansible.builtin.set_fact:
         node_token: "{{ node_token_output.stdout_lines[0] }}"
+      when: node_token_output.stdout_lines | length > 0
 
     - name: Get stats of a EXTERNALLY-MANAGED file
       ansible.builtin.stat:
@@ -120,7 +129,6 @@
         state: present
       become: true
 
-
 - name: Configure the worker nodes.
   hosts: nodes
   gather_facts: false
@@ -138,6 +146,7 @@
       args:
         chdir: "~"
         creates: /var/lib/rancher/k3s/agent/kubelet.kubeconfig
+      when: hostvars[groups['control_plane'][0]].node_token is defined
 
 - name: Set up Helm.
   import_playbook: tasks/kubernetes/helm.yml
