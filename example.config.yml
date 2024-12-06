@@ -23,8 +23,3 @@ active_internet_interface: "wlan0"
 reverse_tunnel_enable: false
 reverse_tunnel_vps_username: my-vps-username
 reverse_tunnel_vps_hostname: my-vps-hostname
-os_environment:
-  - key: CF_API_EMAIL
-    value: websec.prod_settings
-  - key: CF_DNS_API_TOKEN
-    value: admin

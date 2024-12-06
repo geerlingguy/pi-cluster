@@ -40,16 +40,6 @@
         dest: "~/k3s_install.sh"
         mode: a+x
 
-    - name: Populate /etc/environment
-      lineinfile:
-        path: "/etc/environment"
-        state: present
-        regexp: "^{{ item.key }}="
-        line: "{{ item.key }}={{ item.value}}"
-      with_items: "{{ os_environment }}"
-      become: true
-      no_log: true
-
 - name: Configure storage node.
   hosts: storage
   gather_facts: false
