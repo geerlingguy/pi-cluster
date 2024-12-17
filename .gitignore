@@ -1,4 +1,6 @@
 hosts.ini
+hosts-*
 config.yml
+config-*
 ansible_collections
 roles/geerlingguy.*
