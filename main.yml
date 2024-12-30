@@ -8,11 +8,6 @@
     - name: reboot-pi
       ansible.builtin.reboot:
 
-    - name: restart nfs
-      ansible.builtin.service:
-        name: nfs-server
-        state: restarted
-
   vars_files:
     - config.yml
 
@@ -50,6 +45,12 @@
   hosts: storage
   gather_facts: false
   become: true
+
+  handlers:
+    - name: restart nfs
+      ansible.builtin.service:
+        name: nfs-server
+        state: restarted
 
   vars_files:
     - config.yml
@@ -93,6 +94,12 @@
           - golang
           - git
         state: present
+      become: true
+
+    - name: Ignore PEP 668 because it's silly.
+      ansible.builtin.file:
+        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
+        state: absent
       become: true
 
     - name: Ensure required Python libraries are installed.

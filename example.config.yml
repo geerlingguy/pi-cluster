@@ -18,6 +18,7 @@ drupal_extra_settings_php: ''
 # These networking variables are only necessary if using optional static and
 # remote networking features in the `tasks/networking` playbooks.
 ipv4_subnet_prefix: "10.1.1"
+ipv4_gateway: "10.1.1.1"
 active_internet_interface: "wlan0"
 reverse_tunnel_enable: false
 reverse_tunnel_vps_username: my-vps-username
