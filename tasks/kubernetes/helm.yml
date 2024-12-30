@@ -6,7 +6,7 @@
 
   vars:
     # See available releases: https://github.com/helm/helm/releases/
-    helm_version: 'v3.8.0'
+    helm_version: 'v3.16.2'
     helm_platform: linux
     helm_arch: arm64
     helm_bin_path: /usr/local/bin/helm

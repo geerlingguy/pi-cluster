@@ -1,3 +1,0 @@
----
-# Set to 'pi' for Raspberry Pi OS.
-ansible_user: pi

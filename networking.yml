@@ -8,3 +8,4 @@
 
 - name: Configure control plane as a router.
   import_playbook: tasks/networking/router.yml
+  when: control_plane_router_setup

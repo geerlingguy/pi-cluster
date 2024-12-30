@@ -1,0 +1,34 @@
+---
+- name: Prepare Ubuntu for static networking.
+  hosts: cluster
+  gather_facts: false
+  become: true
+
+  vars:
+    netplan_file: /etc/netplan/50-cloud-init.yaml
+
+  tasks:
+    - name: Ensure NetworkManager is installed.
+      ansible.builtin.apt:
+        name: network-manager
+        state: present
+        update_cache: true
+
+    - name: Configure netplan file for NetworkManager.
+      ansible.builtin.copy:
+        dest: "{{ netplan_file }}"
+        mode: 0600
+        content: |
+          # ANSIBLE MANAGED - netplan configuration
+          network:
+            version: 2
+            renderer: NetworkManager
+
+    - name: Regenerate netplan config.
+      ansible.builtin.command: "{{ item }}"
+      with_items:
+        - sudo netplan generate
+        - sudo netplan apply
+
+    - name: Reboot.
+      ansible.builtin.reboot:

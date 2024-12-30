@@ -43,6 +43,7 @@
         type: ethernet
         ip4: "{{ ipv4_subnet_prefix }}.{{ ip_host_octet }}/24"
         gw4: "{{ ipv4_gateway }}"
+        dns4: "{{ dns4_servers }}"
         state: present
       notify: restart networkmanager
       when: not dhcpcd_file_result.stat.exists

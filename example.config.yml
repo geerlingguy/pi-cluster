@@ -19,7 +19,9 @@ drupal_extra_settings_php: ''
 # remote networking features in the `tasks/networking` playbooks.
 ipv4_subnet_prefix: "10.1.1"
 ipv4_gateway: "10.1.1.1"
+dns4_servers: "{{ ipv4_gateway }}"
 active_internet_interface: "wlan0"
 reverse_tunnel_enable: false
 reverse_tunnel_vps_username: my-vps-username
 reverse_tunnel_vps_hostname: my-vps-hostname
+control_plane_router_setup: false

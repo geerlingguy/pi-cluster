@@ -92,7 +92,7 @@ ansible-playbook main.yml
 
 At the end of the playbook, there should be an instance of Drupal running on the cluster. If you log into node 1, you should be able to access it with `curl localhost`.
 
-> If the playbook stalls while installing K3s, you might need to configure static IP addresses for the nodes, especially if using mDNS (like with `.local` names for the nodes). Follow the guide in "Static network configuration" then run the `main.yml` playbook again afterwards, and it should get things in order.
+> If the playbook stalls while installing K3s, [you might need to configure static IP addresses](https://github.com/geerlingguy/pi-cluster/issues/11#issuecomment-1983874999) for the nodes, especially if using mDNS (like with `.local` names for the nodes). Follow the guide in "Static network configuration" then run the `main.yml` playbook again afterwards, and it should get things in order.
 
 If you have SSH tunnelling configured (see later section), you could access `http://[your-vps-ip-or-hostname]:8080/` and you'd see the site.
 
@@ -140,21 +140,37 @@ ansible all -m community.general.shutdown -b
 
 Then after you confirm the nodes are shut down (with K3s running, it can take a few minutes), press the cluster's power button (or yank the Ethernet cables if using PoE) to power down all Pis physically. Then you can switch off or disconnect your power supply.
 
-### Static network configuration (optional, but recommended)
+### Static network configuration (highly recommended)
 
-I using my cluster both on-premise and remote (using a 4G LTE modem connected to the first Pi), I set it up on its own subnet (10.1.1.x). You can change the subnet that's used via the `ipv4_subnet_prefix` variable in `config.yml`.
+Kubernetes generally likes static network routes, especially when using DNS to connect to other nodes in a cluster.
 
-To configure the local network for the Pi cluster (this is optional—you can still use the rest of the configurations without a custom local network), run the playbook:
+There is a playbook which configures static networking so your nodes maintain the same IP address after a reboot, even under different networking scenarios.
+
+If using your cluster both on-premise and remote (e.g. using 4G LTE connected to the first Pi), you can set it up on its _own_ subnet (e.g. `10.1.1.x`). Otherwise, you can set it to the same subnet as your local network.
+
+Configure the subnet via the `ipv4_subnet_prefix` variable in `config.yml`, then run the playbook:
 
 ```
 ansible-playbook networking.yml
 ```
 
-After running the playbook, until a reboot, the Pis will still be accessible over their former DHCP-assigned IP address. After the nodes are rebooted, you will need to make sure your workstation is connected to an interface using the same subnet as the cluster (e.g. 10.1.1.x).
+After running the playbook, until a reboot, the Pis will still be accessible over their former DHCP-assigned IP address. After rebooting, the nodes will be accessible on their new IP addresses.
 
-> Note: After the networking changes are made, since this playbook uses DNS names (e.g. `node1.local`) instead of IP addresses, your computer will still be able to connect to the nodes directly—assuming your network has IPv6 support. Pinging the nodes on their new IP addresses will _not_ work, however. For better network compatibility, it's recommended you set up a separate network interface on the Ansible controller that's on the same subnet as the Pis in the cluster:
-> 
-> On my Mac, I connected a second network interface and manually configured its IP address as `10.1.1.10`, with subnet mask `255.255.255.0`, and that way I could still access all the nodes via IP address or their hostnames (e.g. `node2.local`).
+You can reboot all the nodes with:
+
+```
+ansible all -m reboot -b
+```
+
+> If you are running Ubuntu, and you get an error like `"Failed to find required executable "nmcli"`, run the `ubuntu-setup.yml` playbook: `ansible-playbook tasks/networking/ubuntu-prep.yml`
+
+#### If using a different subnet
+
+If you chose a different subnet than your LAN, make sure your workstation is connected to an interface on the same subnet as the cluster (e.g. `10.1.1.x`).
+
+After the networking changes are made, since this playbook uses DNS names (e.g. `node1.local`) instead of IP addresses, your computer will still be able to connect to the nodes directly—assuming your network has IPv6 support. Pinging the nodes on their new IP addresses will _not_ work, however. For better network compatibility, it's recommended you set up a separate network interface on the Ansible controller that's on the same subnet as the Pis in the cluster:
+
+On my Mac, I connected a second network interface and manually configured its IP address as `10.1.1.10`, with subnet mask `255.255.255.0`, and that way I could still access all the nodes via IP address or their hostnames (e.g. `node2.local`).
 
 Because the cluster subnet needs its own router, node 1 is configured as a router, using `wlan0` as the primary interface for Internet traffic by default. The other nodes get their Internet access through node 1.
 

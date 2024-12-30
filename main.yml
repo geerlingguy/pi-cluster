@@ -40,6 +40,11 @@
         dest: "~/k3s_install.sh"
         mode: a+x
 
+    - name: Install required dependencies
+      ansible.builtin.apt:
+        name: nfs-common
+        state: present
+
 
 - name: Configure storage node.
   hosts: storage
@@ -90,6 +95,8 @@
         name:
           - python3-pip
           - python3-setuptools
+          - python3-openshift
+          - python3-yaml
           - build-essential
           - golang
           - git
@@ -100,14 +107,6 @@
       ansible.builtin.file:
         path: /usr/lib/python3.11/EXTERNALLY-MANAGED
         state: absent
-      become: true
-
-    - name: Ensure required Python libraries are installed.
-      ansible.builtin.pip:
-        name:
-          - openshift
-          - pyyaml
-        state: present
       become: true
 
 
