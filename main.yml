@@ -8,6 +8,11 @@
     - name: reboot-pi
       ansible.builtin.reboot:
 
+    - name: restart nfs
+      ansible.builtin.service:
+        name: nfs-server
+        state: restarted
+
   vars_files:
     - config.yml
 
@@ -40,16 +45,11 @@
         dest: "~/k3s_install.sh"
         mode: a+x
 
+
 - name: Configure storage node.
   hosts: storage
   gather_facts: false
   become: true
-
-  handlers:
-    - name: restart nfs
-      ansible.builtin.service:
-        name: nfs-server
-        state: restarted
 
   vars_files:
     - config.yml
@@ -57,6 +57,7 @@
   tasks:
     - name: Set up storage.
       include_tasks: tasks/storage/{{ storage_type }}.yml
+
 
 - name: Configure the control plane.
   hosts: control_plane
@@ -82,17 +83,6 @@
     - name: Set node_token fact.
       ansible.builtin.set_fact:
         node_token: "{{ node_token_output.stdout_lines[0] }}"
-      when: node_token_output.stdout_lines | length > 0
-
-    - name: Get stats of a EXTERNALLY-MANAGED file
-      ansible.builtin.stat:
-        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
-      register: python_stat
-
-    - name: Move the EXTERNALLY-MANAGED to EXTERNALLY-MANAGED.old so can install python3
-      ansible.builtin.shell: >-
-        mv /usr/lib/python3.11/EXTERNALLY-MANAGED /usr/lib/python3.11/EXTERNALLY-MANAGED.old
-      when: python_stat.stat.exists
 
     - name: Ensure required dependencies are installed.
       ansible.builtin.package:
@@ -105,12 +95,6 @@
         state: present
       become: true
 
-    - name: Ignore PEP 668 because it's silly.
-      ansible.builtin.file:
-        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
-        state: absent
-      become: true
-
     - name: Ensure required Python libraries are installed.
       ansible.builtin.pip:
         name:
@@ -118,6 +102,7 @@
           - pyyaml
         state: present
       become: true
+
 
 - name: Configure the worker nodes.
   hosts: nodes
@@ -136,7 +121,6 @@
       args:
         chdir: "~"
         creates: /var/lib/rancher/k3s/agent/kubelet.kubeconfig
-      when: hostvars[groups['control_plane'][0]].node_token is defined
 
 - name: Set up Helm.
   import_playbook: tasks/kubernetes/helm.yml
@@ -150,6 +134,6 @@
   import_playbook: tasks/kubernetes/prometheus.yml
   tags: ['prometheus']
 
-# - name: Set up Drupal.
-#   import_playbook: tasks/kubernetes/drupal.yml
-#   tags: ['drupal']
+- name: Set up Drupal.
+  import_playbook: tasks/kubernetes/drupal.yml
+  tags: ['drupal']

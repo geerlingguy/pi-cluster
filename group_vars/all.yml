@@ -1,4 +1,4 @@
 ---
 # Set to 'pi' for Raspberry Pi OS.
-ansible_user: rafael
-group_name: rafael
+ansible_user: pi
+group_name: pi
