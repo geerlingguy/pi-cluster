@@ -1,6 +1,6 @@
 # Raspberry Pi Cluster
 
-[![CI](https://github.com/geerlingguy/pi-cluster/workflows/CI/badge.svg?branch=master&event=push)](https://github.com/geerlingguy/pi-cluster/actions?query=workflow%3ACI)
+[![CI](https://github.com/geerlingguy/pi-cluster/actions/workflows/ci.yml/badge.svg)](https://github.com/geerlingguy/pi-cluster/actions/workflows/ci.yml)
 
 <p align="center"><a href="https://www.youtube.com/watch?v=kgVz4-SEhbE"><img src="images/turing-pi-2-hero.jpg?raw=true" width="500" height="auto" alt="Turing Pi 2 - Raspberry Pi Compute Module Cluster" /></a></p>
 
