@@ -113,8 +113,15 @@ K3s' `kubeconfig` file is located at `/etc/rancher/k3s/k3s.yaml`. If you'd like 
 Alternatively, if you'd like to use [k9s](https://k9scli.io) on the main Pi itself, symlink the rancher kubeconfig file into a location where k9s expects to see it:
 
 ```
-# ln -s /etc/rancher/k3s/k3s.yaml ~/.kube/config
-# k9s
+# (perform all commands as root user)
+# Download and install K9s
+wget https://github.com/derailed/k9s/releases/latest/download/k9s_linux_arm64.deb && apt install ./k9s_linux_arm64.deb && rm k9s_linux_arm64.deb
+
+# Symlink K3s kubeconfig into root user's home directory
+ln -s /etc/rancher/k3s/k3s.yaml ~/.kube/config
+
+# Launch k9s
+k9s
 ```
 
 ### Upgrading the cluster
