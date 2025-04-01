@@ -2,7 +2,7 @@
 # Cluster storage options.
 storage_type: filesystem  # options: 'filesystem', 'zfs'
 storage_zfs_pool_name: zfsdata
-#storage_nfs_dir: '{{ storage_zfs_pool_name }}'  # Use this for 'zfs'
+# storage_nfs_dir: '{{ storage_zfs_pool_name }}'  # Use this for 'zfs'
 storage_nfs_dir: "srv"  # Use this for 'filesystem'
 storage_nfs_share_name: nfsshare
 
