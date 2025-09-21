@@ -10,6 +10,8 @@ This repository contains examples and automation used in various Raspberry Pi cl
 
 The inspiration for this project was my first Pi cluster, the [Raspberry Pi Dramble](https://www.pidramble.com), which is still running in my basement to this day!
 
+> **See also**: [Beowulf AI Cluster](https://github.com/geerlingguy/beowulf-ai-cluster) (AI clustering playbooks with a very similar architecture to this project)
+
 ## Usage
 
   1. Make sure you have [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) installed.
