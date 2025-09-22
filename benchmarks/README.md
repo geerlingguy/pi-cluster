@@ -24,8 +24,8 @@ See the `disk-benchmark.sh` comments for usage examples.
 
 The `drupal-benchmark` script runs two types of load tests on the Drupal instance running on the cluster:
 
-  - `wrk` anonymous load test: Tests the performance of completely cacheable page loads as an anonymous user.
-  - `ab` authenticated load test: Tests the performance of partially-cacheable page loads as an authenticated user.
+- `wrk` anonymous load test: Tests the performance of completely cacheable page loads as an anonymous user.
+- `ab` authenticated load test: Tests the performance of partially-cacheable page loads as an authenticated user.
 
 Drupal 10 and later have fairly robust caching in place to make both of these scenarios fairly fast even on a single modern SBC. But it is useful as an end-to-end performance test, from ingress and cluster networking all the way down to Drupal's separate database and persistent volume storage performance.
 
@@ -37,7 +37,7 @@ The `stress.yml` playbook hammers all CPU cores on all nodes simultaneously. Thi
 
 To run it, run the following command within the main `pi-cluster` directory (up one level):
 
-```
+```bash
 ansible-playbook benchmarks/stress.yml
 ```
 
